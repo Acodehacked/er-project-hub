@@ -1,0 +1,30 @@
+# LOCAL DEVELOPMENT ONLY.
+# Runs MySQL 8.4 (LTS) for `npm run dev`. The Next.js app runs on your
+# machine, not in Docker. Production database setup is covered later in
+# docs/DEPLOYMENT.md — do not use these credentials anywhere else.
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: erhub_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_password
+      MYSQL_DATABASE: erhub
+      MYSQL_USER: erhub
+      MYSQL_PASSWORD: erhub_dev_password
+    ports:
+      - '3306:3306'
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    volumes:
+      # Named volume = data survives `docker compose down`.
+      # `docker compose down -v` deletes it (fresh database).
+      - erhub_mysql84_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-uroot', '-proot_dev_password']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  erhub_mysql84_data:
