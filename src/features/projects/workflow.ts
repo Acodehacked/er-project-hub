@@ -146,7 +146,7 @@ export async function unarchiveProject(user: CurrentUser, projectId: string) {
   if (user.role !== 'ADMIN') throw new ForbiddenError();
   const project = await getPolicyProject(projectId);
   if (project.status !== 'ARCHIVED') throw new ValidationError('Project is not archived.');
-  const row = await db.query.projects.findFirst({ where: eq(projects.id, projectId), columns: { approvedAt: true } });
+  const [row] = await db.select({ approvedAt: projects.approvedAt }).from(projects).where(eq(projects.id, projectId)).limit(1);
   const to: ProjectStatus = row?.approvedAt ? 'APPROVED' : 'DRAFT';
   await recordTransition({ projectId, actorId: user.id, action: 'UNARCHIVE', from: 'ARCHIVED', to });
 }

@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, asc, count, desc, eq, isNull, notExists, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, notExists, or, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/mysql-core';
 import { db } from '@/db';
-import { approvals, projectMembers, projectRevisions, projects } from '@/db/schema';
+import { academicYears, approvals, departments, projectMembers, projectRevisions, projects, users } from '@/db/schema';
 import { hasPermission } from '@/lib/auth/rbac';
 import type { CurrentUser } from '@/types';
 import { publicUserColumns } from '@/features/projects/queries';
@@ -36,29 +37,85 @@ function finalScope(user: CurrentUser): SQL | undefined {
   );
 }
 
-const queueWith = {
-  department: { columns: { code: true, name: true } },
-  academicYear: { columns: { label: true } },
-  leader: { columns: publicUserColumns },
-  guide: { columns: publicUserColumns },
-  members: { columns: { id: true } },
-} as const;
+async function fetchQueueProjects(
+  where: SQL | undefined,
+  orderBy: (SQL | SQL.Aliased)[],
+) {
+  const leader = alias(users, 'leader');
+  const guide = alias(users, 'guide');
+
+  const rows = await db
+    .select({
+      project: projects,
+      department: {
+        code: departments.code,
+        name: departments.name,
+      },
+      academicYear: {
+        label: academicYears.label,
+      },
+      leader: {
+        id: leader.id,
+        name: leader.name,
+        username: leader.username,
+        role: leader.role,
+        graduationYear: leader.graduationYear,
+        avatarKey: leader.avatarKey,
+      },
+      guide: {
+        id: guide.id,
+        name: guide.name,
+        username: guide.username,
+        role: guide.role,
+        graduationYear: guide.graduationYear,
+        avatarKey: guide.avatarKey,
+      },
+    })
+    .from(projects)
+    .innerJoin(departments, eq(projects.departmentId, departments.id))
+    .innerJoin(academicYears, eq(projects.academicYearId, academicYears.id))
+    .innerJoin(leader, eq(projects.leaderId, leader.id))
+    .leftJoin(guide, eq(projects.guideId, guide.id))
+    .where(where)
+    .orderBy(...orderBy);
+
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((r) => r.project.id);
+  const membersRows = await db
+    .select({ id: projectMembers.id, projectId: projectMembers.projectId })
+    .from(projectMembers)
+    .where(inArray(projectMembers.projectId, ids));
+
+  const membersByProject = new Map<string, { id: string }[]>();
+  for (const m of membersRows) {
+    const list = membersByProject.get(m.projectId) ?? [];
+    list.push({ id: m.id });
+    membersByProject.set(m.projectId, list);
+  }
+
+  return rows.map((r) => ({
+    ...r.project,
+    department: r.department,
+    academicYear: r.academicYear,
+    leader: r.leader,
+    guide: r.guide?.id ? r.guide : null,
+    members: membersByProject.get(r.project.id) ?? [],
+  }));
+}
 
 export function getScreeningQueue(user: CurrentUser) {
-  return db.query.projects.findMany({
-    where: and(eq(projects.status, 'SUBMITTED'), screeningScope(user)),
-    orderBy: [asc(projects.submittedAt)],
-    with: queueWith,
-  });
+  return fetchQueueProjects(
+    and(eq(projects.status, 'SUBMITTED'), screeningScope(user)),
+    [asc(projects.submittedAt)],
+  );
 }
 
 export function getFinalQueue(user: CurrentUser) {
-  return db.query.projects.findMany({
-    where: and(eq(projects.status, 'UNDER_REVIEW'), finalScope(user)),
-    // Projects I personally guide first, then oldest first.
-    orderBy: [desc(sql`${projects.guideId} = ${user.id}`), asc(projects.submittedAt)],
-    with: queueWith,
-  });
+  return fetchQueueProjects(
+    and(eq(projects.status, 'UNDER_REVIEW'), finalScope(user)),
+    [desc(sql`${projects.guideId} = ${user.id}`), asc(projects.submittedAt)],
+  );
 }
 
 export async function getRevisionQueue(user: CurrentUser) {
@@ -70,21 +127,40 @@ export async function getRevisionQueue(user: CurrentUser) {
   if (stages.length === 0) return [];
 
   const rows = await db
-    .select({ id: projectRevisions.id })
+    .select({
+      revision: projectRevisions,
+      proposedBy: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        role: users.role,
+        graduationYear: users.graduationYear,
+        avatarKey: users.avatarKey,
+      },
+      project: {
+        id: projects.id,
+        title: projects.title,
+        slug: projects.slug,
+      },
+      department: {
+        code: departments.code,
+      },
+    })
     .from(projectRevisions)
     .innerJoin(projects, eq(projects.id, projectRevisions.projectId))
+    .innerJoin(users, eq(projectRevisions.proposedById, users.id))
+    .innerJoin(departments, eq(projects.departmentId, departments.id))
     .where(or(...stages))
     .orderBy(asc(projectRevisions.createdAt));
-  if (rows.length === 0) return [];
 
-  return db.query.projectRevisions.findMany({
-    where: (r, { inArray }) => inArray(r.id, rows.map((x) => x.id)),
-    orderBy: [asc(projectRevisions.createdAt)],
-    with: {
-      proposedBy: { columns: publicUserColumns },
-      project: { columns: { id: true, title: true, slug: true }, with: { department: { columns: { code: true } } } },
+  return rows.map((r) => ({
+    ...r.revision,
+    proposedBy: r.proposedBy,
+    project: {
+      ...r.project,
+      department: r.department,
     },
-  });
+  }));
 }
 
 /** Badge counts for the sidebar. */
@@ -105,21 +181,78 @@ export async function getReviewCounts(user: CurrentUser) {
 }
 
 /** Decisions this reviewer made recently. */
-export function getRecentDecisions(userId: string, limit = 8) {
-  return db.query.approvals.findMany({
-    where: and(eq(approvals.actorId, userId), or(eq(approvals.action, 'APPROVE'), eq(approvals.action, 'REJECT'), eq(approvals.action, 'FORWARD'))),
-    orderBy: [desc(approvals.createdAt)],
-    limit,
-    with: { project: { columns: { id: true, title: true, slug: true, status: true } } },
-  });
+export async function getRecentDecisions(userId: string, limit = 8) {
+  const rows = await db
+    .select({
+      approval: approvals,
+      project: {
+        id: projects.id,
+        title: projects.title,
+        slug: projects.slug,
+        status: projects.status,
+      },
+    })
+    .from(approvals)
+    .innerJoin(projects, eq(approvals.projectId, projects.id))
+    .where(
+      and(
+        eq(approvals.actorId, userId),
+        or(eq(approvals.action, 'APPROVE'), eq(approvals.action, 'REJECT'), eq(approvals.action, 'FORWARD')),
+      ),
+    )
+    .orderBy(desc(approvals.createdAt))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    ...r.approval,
+    project: r.project,
+  }));
 }
 
-export function getRevisionById(id: string) {
-  return db.query.projectRevisions.findFirst({
-    where: eq(projectRevisions.id, id),
-    with: {
-      proposedBy: { columns: publicUserColumns },
-      approvals: { orderBy: [asc(approvals.createdAt)], with: { actor: { columns: publicUserColumns } } },
-    },
-  });
+export async function getRevisionById(id: string) {
+  const [row] = await db
+    .select({
+      revision: projectRevisions,
+      proposedBy: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        role: users.role,
+        graduationYear: users.graduationYear,
+        avatarKey: users.avatarKey,
+      },
+    })
+    .from(projectRevisions)
+    .innerJoin(users, eq(projectRevisions.proposedById, users.id))
+    .where(eq(projectRevisions.id, id))
+    .limit(1);
+
+  if (!row) return undefined;
+
+  const approvalsRows = await db
+    .select({
+      approval: approvals,
+      actor: {
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        role: users.role,
+        graduationYear: users.graduationYear,
+        avatarKey: users.avatarKey,
+      },
+    })
+    .from(approvals)
+    .innerJoin(users, eq(approvals.actorId, users.id))
+    .where(eq(approvals.revisionId, id))
+    .orderBy(asc(approvals.createdAt));
+
+  return {
+    ...row.revision,
+    proposedBy: row.proposedBy,
+    approvals: approvalsRows.map((a) => ({
+      ...a.approval,
+      actor: a.actor,
+    })),
+  };
 }
+

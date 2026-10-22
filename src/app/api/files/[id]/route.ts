@@ -25,13 +25,13 @@ export async function GET(request: NextRequest, ctx: RouteContext<'/api/files/[i
   const storage = getStorage();
 
   if (kind === 'avatar') {
-    const user = await db.query.users.findFirst({ where: eq(users.id, id), columns: { avatarKey: true } });
+    const [user] = await db.select({ avatarKey: users.avatarKey }).from(users).where(eq(users.id, id)).limit(1);
     if (!user?.avatarKey) return notFound();
     return redirectTo(await storage.createDownloadUrl({ key: user.avatarKey, inline: true }), 3600);
   }
 
   if (kind === 'image') {
-    const image = await db.query.projectImages.findFirst({ where: eq(projectImages.id, id) });
+    const [image] = await db.select().from(projectImages).where(eq(projectImages.id, id)).limit(1);
     if (!image) return notFound();
     const project = await getPolicyProject(image.projectId);
     // Unauthorised users get 404 (not 403) so they cannot probe which ids exist.
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<'/api/files/[i
   }
 
   if (kind === 'document') {
-    const doc = await db.query.projectDocuments.findFirst({ where: eq(projectDocuments.id, id) });
+    const [doc] = await db.select().from(projectDocuments).where(eq(projectDocuments.id, id)).limit(1);
     if (!doc) return notFound();
     const user = await getCurrentUser();
     if (!user) return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search)}`, request.url));

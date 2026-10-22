@@ -12,9 +12,10 @@ export async function getUnreadCount(userId: string): Promise<number> {
 }
 
 export function listNotifications(userId: string, limit = 50) {
-  return db.query.notifications.findMany({
-    where: eq(notifications.userId, userId),
-    orderBy: [desc(notifications.createdAt)],
-    limit,
-  });
+  return db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit);
 }

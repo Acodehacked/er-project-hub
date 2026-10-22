@@ -1,7 +1,8 @@
 import 'server-only';
 import { and, count, desc, eq, like, or, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/mysql-core';
 import { db } from '@/db';
-import { auditLogs, projects, users } from '@/db/schema';
+import { academicYears, auditLogs, departments, projects, users } from '@/db/schema';
 import type { Paginated, ProjectStatus, UserRole } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -20,14 +21,40 @@ export async function listUsers(params: { q?: string; role?: UserRole; page: num
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(params.page, totalPages);
 
-  const items = await db.query.users.findMany({
-    where,
-    columns: { passwordHash: false },
-    with: { department: { columns: { code: true } } },
-    orderBy: [desc(users.createdAt)],
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  const rows = await db
+    .select({
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        username: users.username,
+        role: users.role,
+        departmentId: users.departmentId,
+        studentIdentifier: users.studentIdentifier,
+        graduationYear: users.graduationYear,
+        bio: users.bio,
+        avatarKey: users.avatarKey,
+        githubUrl: users.githubUrl,
+        linkedinUrl: users.linkedinUrl,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      },
+      department: {
+        code: departments.code,
+      },
+    })
+    .from(users)
+    .leftJoin(departments, eq(users.departmentId, departments.id))
+    .where(where)
+    .orderBy(desc(users.createdAt))
+    .limit(PAGE_SIZE)
+    .offset((page - 1) * PAGE_SIZE);
+
+  const items = rows.map((r) => ({
+    ...r.user,
+    department: r.department?.code ? r.department : null,
+  }));
   return { items, page, pageSize: PAGE_SIZE, total, totalPages } satisfies Paginated<(typeof items)[number]>;
 }
 
@@ -42,18 +69,48 @@ export async function listAllProjects(params: { q?: string; status?: ProjectStat
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(params.page, totalPages);
 
-  const items = await db.query.projects.findMany({
-    where,
-    columns: { id: true, title: true, slug: true, status: true, isFeatured: true, viewsCount: true, updatedAt: true },
-    with: {
-      department: { columns: { code: true } },
-      academicYear: { columns: { label: true } },
-      leader: { columns: { name: true, username: true } },
-    },
-    orderBy: [desc(projects.updatedAt)],
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  });
+  const leader = alias(users, 'leader');
+  const rows = await db
+    .select({
+      id: projects.id,
+      title: projects.title,
+      slug: projects.slug,
+      status: projects.status,
+      isFeatured: projects.isFeatured,
+      viewsCount: projects.viewsCount,
+      updatedAt: projects.updatedAt,
+      department: {
+        code: departments.code,
+      },
+      academicYear: {
+        label: academicYears.label,
+      },
+      leader: {
+        name: leader.name,
+        username: leader.username,
+      },
+    })
+    .from(projects)
+    .innerJoin(departments, eq(projects.departmentId, departments.id))
+    .innerJoin(academicYears, eq(projects.academicYearId, academicYears.id))
+    .innerJoin(leader, eq(projects.leaderId, leader.id))
+    .where(where)
+    .orderBy(desc(projects.updatedAt))
+    .limit(PAGE_SIZE)
+    .offset((page - 1) * PAGE_SIZE);
+
+  const items = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    status: r.status,
+    isFeatured: r.isFeatured,
+    viewsCount: r.viewsCount,
+    updatedAt: r.updatedAt,
+    department: r.department,
+    academicYear: r.academicYear,
+    leader: r.leader,
+  }));
   return { items, page, pageSize: PAGE_SIZE, total, totalPages };
 }
 
@@ -63,11 +120,23 @@ export async function listAuditLogs(page: number) {
   const pageSize = 30;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(page, totalPages);
-  const items = await db.query.auditLogs.findMany({
-    with: { user: { columns: { name: true, username: true } } },
-    orderBy: [desc(auditLogs.createdAt)],
-    limit: pageSize,
-    offset: (current - 1) * pageSize,
-  });
+  const rows = await db
+    .select({
+      log: auditLogs,
+      user: {
+        name: users.name,
+        username: users.username,
+      },
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(pageSize)
+    .offset((current - 1) * pageSize);
+
+  const items = rows.map((r) => ({
+    ...r.log,
+    user: r.user?.name ? r.user : null,
+  }));
   return { items, page: current, pageSize, total, totalPages };
 }

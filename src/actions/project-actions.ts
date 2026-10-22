@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 import { db } from '@/db';
+import { projectDocuments, projectImages } from '@/db/schema';
 import { requireUser } from '@/lib/auth/guards';
 import { runAction } from '@/lib/action';
 import { idSchema } from '@/lib/validation/common';
@@ -122,14 +124,13 @@ export async function deleteProjectAction(projectId: string) {
   return runAction(async () => {
     const user = await requireUser();
     const id = idSchema.parse(projectId);
-    const files = await db.query.projects.findFirst({
-      where: (p, { eq }) => eq(p.id, id),
-      columns: { id: true },
-      with: { images: { columns: { storageKey: true } }, documents: { columns: { storageKey: true } } },
-    });
+    const [images, documents] = await Promise.all([
+      db.select({ storageKey: projectImages.storageKey }).from(projectImages).where(eq(projectImages.projectId, id)),
+      db.select({ storageKey: projectDocuments.storageKey }).from(projectDocuments).where(eq(projectDocuments.projectId, id)),
+    ]);
     await service.deleteProject(user, id);
-    if (files && isStorageConfigured) {
-      await purgeProjectFiles([...files.images, ...files.documents].map((f) => f.storageKey));
+    if (isStorageConfigured) {
+      await purgeProjectFiles([...images, ...documents].map((f) => f.storageKey));
     }
     refresh();
     return { redirectTo: '/dashboard/projects' };

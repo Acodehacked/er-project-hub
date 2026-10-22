@@ -23,10 +23,11 @@ import { canFinalReviewRevision, canProposeRevision, canScreenRevision, isLeader
 export type TeamChange = { userId: string; role: ProjectMemberRole; roleTitle?: string | null };
 
 async function assertNoOpenRevision(projectId: string) {
-  const open = await db.query.projectRevisions.findFirst({
-    where: and(eq(projectRevisions.projectId, projectId), inArray(projectRevisions.status, ['SUBMITTED', 'UNDER_REVIEW'])),
-    columns: { id: true },
-  });
+  const [open] = await db
+    .select({ id: projectRevisions.id })
+    .from(projectRevisions)
+    .where(and(eq(projectRevisions.projectId, projectId), inArray(projectRevisions.status, ['SUBMITTED', 'UNDER_REVIEW'])))
+    .limit(1);
   if (open) throw new ConflictError('There is already a revision waiting for review. Cancel it first to propose another.');
 }
 
@@ -95,7 +96,7 @@ export async function proposeTeamRevision(user: CurrentUser, projectId: string, 
 }
 
 export async function cancelRevision(user: CurrentUser, revisionId: string) {
-  const revision = await db.query.projectRevisions.findFirst({ where: eq(projectRevisions.id, revisionId) });
+  const [revision] = await db.select().from(projectRevisions).where(eq(projectRevisions.id, revisionId)).limit(1);
   if (!revision) throw new NotFoundError('Revision not found.');
   const project = await getPolicyProject(revision.projectId);
   if (revision.proposedById !== user.id && !isLeader(user, project) && user.role !== 'ADMIN') throw new ForbiddenError();
@@ -143,7 +144,7 @@ async function moveRevision(
 
 export async function decideRevision(user: CurrentUser, input: ReviewDecisionInput) {
   assertRejectionComment(input);
-  const revision = await db.query.projectRevisions.findFirst({ where: eq(projectRevisions.id, input.targetId) });
+  const [revision] = await db.select().from(projectRevisions).where(eq(projectRevisions.id, input.targetId)).limit(1);
   if (!revision) throw new NotFoundError('Revision not found.');
   const project = await getPolicyProject(revision.projectId);
   const team = project.members.map((m) => m.userId);

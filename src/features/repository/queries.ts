@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { and, asc, count, countDistinct, desc, eq, exists, inArray, like, or, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/mysql-core';
 import { db } from '@/db';
 import {
   academicYears,
@@ -10,6 +11,7 @@ import {
   projectTechnologies,
   projects,
   technologies,
+  users,
 } from '@/db/schema';
 import type { RepositoryQuery } from '@/lib/validation/project';
 import type { Paginated } from '@/types';
@@ -35,29 +37,107 @@ function toBooleanQuery(q: string): string | null {
 /** Card-sized data for a list of project ids, preserving the given order. */
 export async function getProjectCards(ids: string[]) {
   if (ids.length === 0) return [];
-  const rows = await db.query.projects.findMany({
-    where: inArray(projects.id, ids),
-    columns: {
-      id: true,
-      slug: true,
-      title: true,
-      abstract: true,
-      status: true,
-      viewsCount: true,
-      isFeatured: true,
-      approvedAt: true,
-      updatedAt: true,
-    },
-    with: {
-      department: { columns: { code: true, name: true } },
-      academicYear: { columns: { label: true } },
-      leader: { columns: publicUserColumns },
-      images: { columns: { id: true }, where: eq(projectImages.isCover, true), limit: 1 },
-      technologies: { with: { technology: { columns: { name: true, slug: true } } }, limit: 4 },
-      members: { columns: { id: true } },
-    },
-  });
-  const byId = new Map(rows.map((r) => [r.id, r]));
+  const leader = alias(users, 'leader');
+
+  const rows = await db
+    .select({
+      id: projects.id,
+      slug: projects.slug,
+      title: projects.title,
+      abstract: projects.abstract,
+      status: projects.status,
+      viewsCount: projects.viewsCount,
+      isFeatured: projects.isFeatured,
+      approvedAt: projects.approvedAt,
+      updatedAt: projects.updatedAt,
+      department: {
+        code: departments.code,
+        name: departments.name,
+      },
+      academicYear: {
+        label: academicYears.label,
+      },
+      leader: {
+        id: leader.id,
+        name: leader.name,
+        username: leader.username,
+        role: leader.role,
+        graduationYear: leader.graduationYear,
+        avatarKey: leader.avatarKey,
+      },
+    })
+    .from(projects)
+    .innerJoin(departments, eq(projects.departmentId, departments.id))
+    .innerJoin(academicYears, eq(projects.academicYearId, academicYears.id))
+    .innerJoin(leader, eq(projects.leaderId, leader.id))
+    .where(inArray(projects.id, ids));
+
+  const [imagesRows, techRows, membersRows] = await Promise.all([
+    db
+      .select({ id: projectImages.id, projectId: projectImages.projectId })
+      .from(projectImages)
+      .where(and(inArray(projectImages.projectId, ids), eq(projectImages.isCover, true))),
+    db
+      .select({
+        projectId: projectTechnologies.projectId,
+        technology: {
+          name: technologies.name,
+          slug: technologies.slug,
+        },
+      })
+      .from(projectTechnologies)
+      .innerJoin(technologies, eq(projectTechnologies.technologyId, technologies.id))
+      .where(inArray(projectTechnologies.projectId, ids)),
+    db
+      .select({ id: projectMembers.id, projectId: projectMembers.projectId })
+      .from(projectMembers)
+      .where(inArray(projectMembers.projectId, ids)),
+  ]);
+
+  const imagesByProject = new Map<string, { id: string }[]>();
+  for (const img of imagesRows) {
+    const list = imagesByProject.get(img.projectId) ?? [];
+    if (list.length === 0) {
+      list.push({ id: img.id });
+      imagesByProject.set(img.projectId, list);
+    }
+  }
+
+  const techsByProject = new Map<string, { technology: { name: string; slug: string } }[]>();
+  for (const t of techRows) {
+    const list = techsByProject.get(t.projectId) ?? [];
+    if (list.length < 4) {
+      list.push({ technology: t.technology });
+      techsByProject.set(t.projectId, list);
+    }
+  }
+
+  const membersByProject = new Map<string, { id: string }[]>();
+  for (const m of membersRows) {
+    const list = membersByProject.get(m.projectId) ?? [];
+    list.push({ id: m.id });
+    membersByProject.set(m.projectId, list);
+  }
+
+  const assembled = rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    abstract: r.abstract,
+    status: r.status,
+    viewsCount: r.viewsCount,
+    isFeatured: r.isFeatured,
+    approvedAt: r.approvedAt,
+    updatedAt: r.updatedAt,
+    department: r.department,
+    academicYear: r.academicYear,
+    leader: r.leader,
+    images: imagesByProject.get(r.id) ?? [],
+    technologies: techsByProject.get(r.id) ?? [],
+    members: membersByProject.get(r.id) ?? [],
+  }));
+
+  const byId = new Map(assembled.map((r) => [r.id, r]));
   return ids.map((id) => byId.get(id)).filter((r): r is NonNullable<typeof r> => !!r);
 }
 
@@ -157,8 +237,9 @@ export async function getTechnologyUsage(limit?: number) {
   return limit ? usage.limit(limit) : usage;
 }
 
-export function getTechnologyBySlug(slug: string) {
-  return db.query.technologies.findFirst({ where: eq(technologies.slug, slug) });
+export async function getTechnologyBySlug(slug: string) {
+  const [row] = await db.select().from(technologies).where(eq(technologies.slug, slug)).limit(1);
+  return row;
 }
 
 export async function getFeaturedProjects(limit = 6) {

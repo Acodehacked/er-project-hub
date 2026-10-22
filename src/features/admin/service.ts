@@ -23,11 +23,11 @@ export async function updateUser(admin: CurrentUser, input: UpdateUserInput) {
   if (input.userId === admin.id && (input.role !== 'ADMIN' || !input.isActive)) {
     throw new ValidationError('You cannot demote or deactivate your own account.');
   }
-  const target = await db.query.users.findFirst({ where: eq(users.id, input.userId) });
+  const [target] = await db.select().from(users).where(eq(users.id, input.userId)).limit(1);
   if (!target) throw new NotFoundError('User not found.');
 
   if (input.departmentId) {
-    const dept = await db.query.departments.findFirst({ where: eq(departments.id, input.departmentId), columns: { id: true } });
+    const [dept] = await db.select({ id: departments.id }).from(departments).where(eq(departments.id, input.departmentId)).limit(1);
     if (!dept) throw new ValidationError('Unknown department.');
   }
 
@@ -59,7 +59,7 @@ export async function updateUser(admin: CurrentUser, input: UpdateUserInput) {
 
 export async function resetUserPassword(admin: CurrentUser, userId: string, newPassword: string) {
   assert(admin, 'admin:users');
-  const target = await db.query.users.findFirst({ where: eq(users.id, userId), columns: { id: true } });
+  const [target] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
   if (!target) throw new NotFoundError('User not found.');
   await db.update(users).set({ passwordHash: await hashPassword(newPassword) }).where(eq(users.id, userId));
   await logAudit({ userId: admin.id, action: 'user.password_reset', targetEntity: 'user', targetId: userId });
@@ -129,9 +129,9 @@ export async function saveTechnology(admin: CurrentUser, input: TechnologyInput)
  */
 export async function mergeTechnologies(admin: CurrentUser, sourceId: string, targetId: string) {
   assert(admin, 'admin:catalog');
-  const [source, target] = await Promise.all([
-    db.query.technologies.findFirst({ where: eq(technologies.id, sourceId) }),
-    db.query.technologies.findFirst({ where: eq(technologies.id, targetId) }),
+  const [[source], [target]] = await Promise.all([
+    db.select().from(technologies).where(eq(technologies.id, sourceId)).limit(1),
+    db.select().from(technologies).where(eq(technologies.id, targetId)).limit(1),
   ]);
   if (!source || !target) throw new NotFoundError('Technology not found.');
 

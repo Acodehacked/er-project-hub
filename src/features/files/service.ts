@@ -84,7 +84,7 @@ export async function confirmUpload(user: CurrentUser, input: ConfirmUploadInput
   const fileName = sanitizeFileName(input.fileName);
 
   if (input.kind === 'avatar') {
-    const current = await db.query.users.findFirst({ where: eq(users.id, user.id), columns: { avatarKey: true } });
+    const [current] = await db.select({ avatarKey: users.avatarKey }).from(users).where(eq(users.id, user.id)).limit(1);
     await db.update(users).set({ avatarKey: input.key }).where(eq(users.id, user.id));
     if (current?.avatarKey) await storage.delete(current.avatarKey).catch(() => undefined);
     return { id: user.id };
@@ -136,14 +136,14 @@ export async function deleteProjectFile(user: CurrentUser, kind: 'image' | 'docu
 
   // Keep a cover image if one was removed.
   if (kind === 'image' && 'isCover' in file && file.isCover) {
-    const next = await db.query.projectImages.findFirst({ where: eq(projectImages.projectId, file.projectId) });
+    const [next] = await db.select().from(projectImages).where(eq(projectImages.projectId, file.projectId)).limit(1);
     if (next) await db.update(projectImages).set({ isCover: true }).where(eq(projectImages.id, next.id));
   }
   await logAudit({ userId: user.id, action: `file.delete.${kind}`, targetEntity: 'project', targetId: file.projectId, details: { fileName: file.fileName } });
 }
 
 export async function setCoverImage(user: CurrentUser, imageId: string) {
-  const image = await db.query.projectImages.findFirst({ where: eq(projectImages.id, imageId) });
+  const [image] = await db.select().from(projectImages).where(eq(projectImages.id, imageId)).limit(1);
   if (!image) throw new NotFoundError('Image not found.');
   const project = await getPolicyProject(image.projectId);
   if (!canEditLight(user, project)) throw new ForbiddenError();

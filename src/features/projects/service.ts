@@ -43,9 +43,9 @@ export function makeProjectSlug(title: string) {
 }
 
 async function assertCatalogRefs(departmentId: string, academicYearId: string) {
-  const [dept, year] = await Promise.all([
-    db.query.departments.findFirst({ where: eq(departments.id, departmentId), columns: { id: true } }),
-    db.query.academicYears.findFirst({ where: eq(academicYears.id, academicYearId), columns: { id: true } }),
+  const [[dept], [year]] = await Promise.all([
+    db.select({ id: departments.id }).from(departments).where(eq(departments.id, departmentId)).limit(1),
+    db.select({ id: academicYears.id }).from(academicYears).where(eq(academicYears.id, academicYearId)).limit(1),
   ]);
   if (!dept) throw new ValidationError('Choose a valid department.', { departmentId: ['Unknown department'] });
   if (!year) throw new ValidationError('Choose a valid academic year.', { academicYearId: ['Unknown year'] });
@@ -153,14 +153,17 @@ export async function setTechnologies(user: CurrentUser, projectId: string, inpu
 /** Finds an active student/representative by email, username or register number. */
 export async function lookupStudent(identifier: string) {
   const value = identifier.trim();
-  const found = await db.query.users.findFirst({
-    where: and(
-      or(eq(users.email, value.toLowerCase()), eq(users.username, value.toLowerCase()), eq(users.studentIdentifier, value)),
-      eq(users.isActive, true),
-      inArray(users.role, ['STUDENT', 'REPRESENTATIVE']),
-    ),
-    columns: { id: true, name: true, username: true, graduationYear: true, avatarKey: true, studentIdentifier: true },
-  });
+  const [found] = await db
+    .select({ id: users.id, name: users.name, username: users.username, graduationYear: users.graduationYear, avatarKey: users.avatarKey, studentIdentifier: users.studentIdentifier })
+    .from(users)
+    .where(
+      and(
+        or(eq(users.email, value.toLowerCase()), eq(users.username, value.toLowerCase()), eq(users.studentIdentifier, value)),
+        eq(users.isActive, true),
+        inArray(users.role, ['STUDENT', 'REPRESENTATIVE']),
+      ),
+    )
+    .limit(1);
   if (!found) throw new NotFoundError('No active student found with that email, username or register number.');
   return found;
 }
@@ -193,9 +196,11 @@ export async function updateMember(user: CurrentUser, projectId: string, input: 
   const project = await getPolicyProject(projectId);
   if (!canManageTeam(user, project)) throw new ForbiddenError('Only the team leader can assign roles.');
 
-  const member = await db.query.projectMembers.findFirst({
-    where: and(eq(projectMembers.id, input.memberId), eq(projectMembers.projectId, projectId)),
-  });
+  const [member] = await db
+    .select()
+    .from(projectMembers)
+    .where(and(eq(projectMembers.id, input.memberId), eq(projectMembers.projectId, projectId)))
+    .limit(1);
   if (!member) throw new NotFoundError('Member not found.');
   if (member.role === 'LEADER') throw new ValidationError("The leader's role cannot be changed.");
 
@@ -209,9 +214,11 @@ export async function removeMember(user: CurrentUser, projectId: string, memberI
   const project = await getPolicyProject(projectId);
   if (!canManageTeam(user, project)) throw new ForbiddenError('Only the team leader can remove members.');
 
-  const member = await db.query.projectMembers.findFirst({
-    where: and(eq(projectMembers.id, memberId), eq(projectMembers.projectId, projectId)),
-  });
+  const [member] = await db
+    .select()
+    .from(projectMembers)
+    .where(and(eq(projectMembers.id, memberId), eq(projectMembers.projectId, projectId)))
+    .limit(1);
   if (!member) throw new NotFoundError('Member not found.');
   if (member.role === 'LEADER') throw new ValidationError('The leader cannot be removed.');
 
@@ -229,10 +236,11 @@ export async function setGuide(user: CurrentUser, projectId: string, guideId: st
   if (!canManageTeam(user, project)) throw new ForbiddenError('Only the team leader can choose the guide.');
 
   if (guideId) {
-    const guide = await db.query.users.findFirst({
-      where: and(eq(users.id, guideId), eq(users.isActive, true), eq(users.role, 'FACULTY')),
-      columns: { id: true },
-    });
+    const [guide] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, guideId), eq(users.isActive, true), eq(users.role, 'FACULTY')))
+      .limit(1);
     if (!guide) throw new ValidationError('Choose an active faculty member as guide.');
   }
 

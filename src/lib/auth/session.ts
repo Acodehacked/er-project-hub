@@ -20,20 +20,21 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const userId = session?.user?.id;
   if (!userId) return null;
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: {
-      id: true,
-      name: true,
-      email: true,
-      username: true,
-      role: true,
-      departmentId: true,
-      graduationYear: true,
-      avatarKey: true,
-      isActive: true,
-    },
-  });
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      username: users.username,
+      role: users.role,
+      departmentId: users.departmentId,
+      graduationYear: users.graduationYear,
+      avatarKey: users.avatarKey,
+      isActive: users.isActive,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
   if (!user || !user.isActive) return null;
   const { isActive: _isActive, ...current } = user;

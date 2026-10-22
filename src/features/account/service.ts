@@ -21,13 +21,14 @@ export async function registerStudent(input: RegisterData) {
     });
   }
 
-  const dept = await db.query.departments.findFirst({ where: eq(departments.id, input.departmentId), columns: { id: true } });
+  const [dept] = await db.select({ id: departments.id }).from(departments).where(eq(departments.id, input.departmentId)).limit(1);
   if (!dept) throw new ValidationError('Choose your department.', { departmentId: ['Unknown department'] });
 
-  const clash = await db.query.users.findFirst({
-    where: or(eq(users.email, input.email), eq(users.username, input.username), eq(users.studentIdentifier, input.studentIdentifier)),
-    columns: { email: true, username: true, studentIdentifier: true },
-  });
+  const [clash] = await db
+    .select({ email: users.email, username: users.username, studentIdentifier: users.studentIdentifier })
+    .from(users)
+    .where(or(eq(users.email, input.email), eq(users.username, input.username), eq(users.studentIdentifier, input.studentIdentifier)))
+    .limit(1);
   if (clash) {
     const fieldErrors: Record<string, string[]> = {};
     if (clash.email === input.email) fieldErrors.email = ['An account with this email already exists'];
@@ -53,7 +54,7 @@ export async function registerStudent(input: RegisterData) {
 }
 
 export async function isUsernameAvailable(username: string) {
-  const found = await db.query.users.findFirst({ where: eq(users.username, username), columns: { id: true } });
+  const [found] = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
   return !found;
 }
 
@@ -70,7 +71,7 @@ export async function updateProfile(userId: string, input: ProfileInput) {
 }
 
 export async function changePassword(userId: string, input: ChangePasswordInput) {
-  const user = await db.query.users.findFirst({ where: eq(users.id, userId), columns: { passwordHash: true } });
+  const [user] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new NotFoundError();
   if (!(await verifyPassword(input.currentPassword, user.passwordHash))) {
     throw new ValidationError('Current password is incorrect.', { currentPassword: ['Incorrect password'] });
@@ -80,10 +81,37 @@ export async function changePassword(userId: string, input: ChangePasswordInput)
   await logAudit({ userId, action: 'user.password_change', targetEntity: 'user', targetId: userId });
 }
 
-export function getAccount(userId: string) {
-  return db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { passwordHash: false },
-    with: { department: { columns: { code: true, name: true } } },
-  });
+export async function getAccount(userId: string) {
+  const [row] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      username: users.username,
+      role: users.role,
+      departmentId: users.departmentId,
+      studentIdentifier: users.studentIdentifier,
+      graduationYear: users.graduationYear,
+      bio: users.bio,
+      avatarKey: users.avatarKey,
+      githubUrl: users.githubUrl,
+      linkedinUrl: users.linkedinUrl,
+      isActive: users.isActive,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      department: {
+        code: departments.code,
+        name: departments.name,
+      },
+    })
+    .from(users)
+    .leftJoin(departments, eq(users.departmentId, departments.id))
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!row) return undefined;
+  return {
+    ...row,
+    department: row.department.code ? row.department : null,
+  };
 }

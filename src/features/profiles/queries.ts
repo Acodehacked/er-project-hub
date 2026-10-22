@@ -2,27 +2,38 @@ import 'server-only';
 import { cache } from 'react';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { projectMembers, projects, users } from '@/db/schema';
+import { departments, projectMembers, projects, users } from '@/db/schema';
 import { getProjectCards } from '@/features/repository/queries';
 
 /** Public profile data. Never includes email, register number or password. */
 export const getPublicProfile = cache(async (username: string) => {
-  return db.query.users.findFirst({
-    where: and(eq(users.username, username.toLowerCase()), eq(users.isActive, true)),
-    columns: {
-      id: true,
-      name: true,
-      username: true,
-      role: true,
-      graduationYear: true,
-      bio: true,
-      avatarKey: true,
-      githubUrl: true,
-      linkedinUrl: true,
-      createdAt: true,
-    },
-    with: { department: { columns: { code: true, name: true } } },
-  });
+  const [row] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      username: users.username,
+      role: users.role,
+      graduationYear: users.graduationYear,
+      bio: users.bio,
+      avatarKey: users.avatarKey,
+      githubUrl: users.githubUrl,
+      linkedinUrl: users.linkedinUrl,
+      createdAt: users.createdAt,
+      department: {
+        code: departments.code,
+        name: departments.name,
+      },
+    })
+    .from(users)
+    .leftJoin(departments, eq(users.departmentId, departments.id))
+    .where(and(eq(users.username, username.toLowerCase()), eq(users.isActive, true)))
+    .limit(1);
+
+  if (!row) return undefined;
+  return {
+    ...row,
+    department: row.department.code ? row.department : null,
+  };
 });
 
 /** Approved projects a student worked on (as any team member). */

@@ -38,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const byEmail = checkRateLimit(`login:email:${email}`, RATE_LIMITS.login);
         if (!byIp.allowed || !byEmail.allowed) throw new RateLimitedSignin();
 
-        const user = await db.query.users.findFirst({ where: eq(users.email, email) });
+        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
         // Always run bcrypt so response time does not reveal whether the email exists.
         const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
         if (!user || !valid || !user.isActive) return null;

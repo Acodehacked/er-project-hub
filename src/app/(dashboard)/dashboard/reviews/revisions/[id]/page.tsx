@@ -61,7 +61,10 @@ export default async function ReviewRevisionPage({ params }: PageProps<'/dashboa
   const c = revision.changes;
 
   const proposedMembers = c.members
-    ? await db.query.users.findMany({ where: inArray(users.id, c.members.map((m) => m.userId).concat('__none')), columns: { id: true, name: true } })
+    ? await db
+        .select({ id: users.id, name: users.name })
+        .from(users)
+        .where(inArray(users.id, c.members.map((m) => m.userId).concat('__none')))
     : [];
 
   const member = isMember(user, project);
