@@ -112,6 +112,6 @@ export async function getAccount(userId: string) {
   if (!row) return undefined;
   return {
     ...row,
-    department: row.department.code ? row.department : null,
+    department: row.department?.code ? row.department : null,
   };
 }

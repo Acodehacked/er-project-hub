@@ -50,6 +50,6 @@ export const getFacultyGuides = cache(async () => {
     username: r.username,
     departmentId: r.departmentId,
     avatarKey: r.avatarKey,
-    department: r.department.code ? r.department : null,
+    department: r.department?.code ? r.department : null,
   }));
 });
