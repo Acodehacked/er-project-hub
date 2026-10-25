@@ -3,8 +3,9 @@ import { Logo } from '@/components/shared/logo';
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-card/40">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
+    <footer className="relative overflow-hidden border-t bg-card">
+      <div className="bg-spectrum absolute inset-x-0 top-0 h-px opacity-60" aria-hidden />
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
         <div className="space-y-3">
           <Logo />
           <p className="max-w-sm text-sm text-muted-foreground">

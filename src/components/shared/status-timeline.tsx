@@ -41,7 +41,7 @@ export function StatusTimeline({ steps, emptyText = 'No review activity yet.' }:
               </p>
               <p className="text-xs text-muted-foreground">{formatDateTime(step.createdAt)}</p>
               {step.comment && (
-                <blockquote className="mt-2 rounded-lg border-l-2 border-primary/50 bg-muted/60 px-3 py-2 text-sm whitespace-pre-line">{step.comment}</blockquote>
+                <blockquote className="mt-2 rounded-lg border-l-2 border-tile-3/50 bg-muted/60 px-3 py-2 text-sm whitespace-pre-line">{step.comment}</blockquote>
               )}
             </div>
           </div>

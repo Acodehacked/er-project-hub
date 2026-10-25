@@ -105,7 +105,7 @@ export default async function ProjectOverviewPage({ params }: PageProps<'/dashbo
               </CardHeader>
               <CardContent className="space-y-3">
                 {openRevision && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-tile-3/30 bg-accent/50 p-3">
                     <div className="text-sm">
                       <p className="font-medium">Revision in review</p>
                       <p className="text-muted-foreground">Proposed by {openRevision.proposedBy.name} · {timeAgo(openRevision.createdAt)}</p>

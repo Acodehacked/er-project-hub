@@ -14,9 +14,9 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Empty className="border border-dashed bg-card/50">
+    <Empty className="rounded-2xl border border-dashed bg-card/60">
       <EmptyHeader>
-        <EmptyMedia variant="icon" className="bg-primary/10 text-primary">
+        <EmptyMedia variant="icon" className="bg-accent text-accent-foreground">
           <Icon />
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>

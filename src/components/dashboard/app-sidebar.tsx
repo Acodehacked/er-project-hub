@@ -47,7 +47,7 @@ export function AppSidebar({ sections, badges, user, canCreate }: Props) {
       <SidebarContent>
         {canCreate && (
           <div className="px-3 pt-3 group-data-[collapsible=icon]:hidden">
-            <Button asChild className="w-full justify-start shadow-sm shadow-primary/20">
+            <Button asChild className="w-full justify-start">
               <Link href="/dashboard/projects/new" onClick={() => setOpenMobile(false)}><Plus /> New project</Link>
             </Button>
           </div>
@@ -70,7 +70,7 @@ export function AppSidebar({ sections, badges, user, canCreate }: Props) {
                         </Link>
                       </SidebarMenuButton>
                       {count > 0 && (
-                        <SidebarMenuBadge className="rounded-full bg-primary px-1.5 text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground">
+                        <SidebarMenuBadge className="bg-spectrum rounded-full px-1.5 text-white peer-data-[active=true]/menu-button:text-white">
                           {count > 99 ? '99+' : count}
                         </SidebarMenuBadge>
                       )}
@@ -82,7 +82,7 @@ export function AppSidebar({ sections, badges, user, canCreate }: Props) {
         ))}
       </SidebarContent>
       <SidebarFooter className="border-t">
-        <Link href="/dashboard/settings" className="flex items-center gap-3 rounded-md p-1.5 hover:bg-sidebar-accent">
+        <Link href="/dashboard/settings" className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-sidebar-accent">
           <UserAvatar user={user} />
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-medium">{user.name}</p>

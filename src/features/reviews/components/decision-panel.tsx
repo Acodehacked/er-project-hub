@@ -49,7 +49,7 @@ export function DecisionPanel({
   };
 
   return (
-    <Card className="border-primary/40 shadow-lg shadow-primary/5">
+    <Card className="border-tile-3/40 shadow-lg shadow-tile-3/10">
       <CardHeader>
         <CardTitle className="text-base">{stage === 'screen' ? 'Screening decision' : 'Final decision'}</CardTitle>
         <CardDescription>

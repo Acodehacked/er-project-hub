@@ -39,7 +39,7 @@ export function NotificationBell({ unread, items }: { unread: number; items: Bel
         <Button variant="ghost" size="icon" className="relative" aria-label={`Notifications${unread ? ` (${unread} unread)` : ''}`}>
           <Bell />
           {unread > 0 && (
-            <span className="absolute top-1.5 right-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-4 font-bold text-primary-foreground">
+            <span className="absolute top-1.5 right-1.5 grid min-w-4 place-items-center bg-spectrum rounded-full px-1 text-[10px] leading-4 font-bold text-white">
               {unread > 9 ? '9+' : unread}
             </span>
           )}
@@ -61,7 +61,7 @@ export function NotificationBell({ unread, items }: { unread: number; items: Bel
             <ul className="divide-y">
               {items.map((n) => (
                 <li key={n.id}>
-                  <button type="button" onClick={() => open(n)} className={cn('flex w-full gap-3 px-4 py-3 text-left hover:bg-accent/60', !n.isRead && 'bg-primary/5')}>
+                  <button type="button" onClick={() => open(n)} className={cn('flex w-full gap-3 px-4 py-3 text-left hover:bg-accent/60', !n.isRead && 'bg-accent/60')}>
                     <NotificationIcon type={n.type} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2 text-sm font-medium">

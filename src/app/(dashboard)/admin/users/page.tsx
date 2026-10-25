@@ -45,7 +45,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<'/admin
             <Link
               key={r ?? 'all'}
               href={roleHref(r)}
-              className={cn('rounded-full border px-3 py-1 text-sm transition-colors', query.role === r ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-primary/50')}
+              className={cn('rounded-full border px-3 py-1 text-sm transition-colors', query.role === r ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-tile-3/50')}
             >
               {r ? ROLE_LABELS[r] : 'All'}
             </Link>

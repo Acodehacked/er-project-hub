@@ -36,7 +36,7 @@ export default async function AdminProjectsPage({ searchParams }: PageProps<'/ad
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-1.5">
           {[undefined, ...PROJECT_STATUSES].map((s) => (
-            <Link key={s ?? 'all'} href={statusHref(s)} className={cn('rounded-full border px-3 py-1 text-sm transition-colors', query.status === s ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-primary/50')}>
+            <Link key={s ?? 'all'} href={statusHref(s)} className={cn('rounded-full border px-3 py-1 text-sm transition-colors', query.status === s ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-tile-3/50')}>
               {s ? STATUS_LABELS[s] : 'All'}
             </Link>
           ))}

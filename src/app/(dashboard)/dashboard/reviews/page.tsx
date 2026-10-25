@@ -80,9 +80,9 @@ export default async function ReviewsPage({ searchParams }: PageProps<'/dashboar
               {revisions.map((r) => (
                 <li key={r.id}>
                   <Link href={`/dashboard/reviews/revisions/${r.id}`} className="group flex items-center gap-4 p-4 hover:bg-accent/50">
-                    <span className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary"><GitPullRequestArrow className="size-4" /></span>
+                    <span className="grid size-9 place-items-center rounded-full bg-accent text-accent-foreground"><GitPullRequestArrow className="size-4" /></span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium group-hover:text-primary">{r.project.title}</p>
+                      <p className="truncate font-medium group-hover:text-accent-foreground">{r.project.title}</p>
                       <p className="text-xs text-muted-foreground">
                         Changes to {Object.keys(r.changes).map((k) => k.replace('Id', '')).join(', ')} · by {r.proposedBy.name} · {timeAgo(r.createdAt)}
                       </p>

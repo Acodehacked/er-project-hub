@@ -117,9 +117,9 @@ export default async function DashboardHome() {
                   {myProjects.slice(0, 5).map((p) => {
                     const openRevision = p.revisions.find((r) => r.status === 'SUBMITTED' || r.status === 'UNDER_REVIEW');
                     return (
-                      <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-primary/40">
+                      <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-tile-3/50">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium group-hover:text-primary">{p.title}</p>
+                          <p className="truncate font-medium group-hover:text-accent-foreground">{p.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {p.department.code} · {p.academicYear.label} · {p.members.length} member{p.members.length === 1 ? '' : 's'} · updated {timeAgo(p.updatedAt)}
                             {openRevision && ' · revision in review'}
@@ -139,7 +139,7 @@ export default async function DashboardHome() {
               <h2 className="text-lg font-semibold">Teams you guide</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {guided.slice(0, 4).map((p) => (
-                  <Link key={p.id} href={p.status === 'APPROVED' ? `/projects/${p.slug}` : `/dashboard/reviews/${p.id}`} className="rounded-xl border bg-card p-4 hover:border-primary/40">
+                  <Link key={p.id} href={p.status === 'APPROVED' ? `/projects/${p.slug}` : `/dashboard/reviews/${p.id}`} className="rounded-xl border bg-card p-4 hover:border-tile-3/50">
                     <p className="truncate font-medium">{p.title}</p>
                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span>{p.leader.name}</span>
@@ -170,7 +170,7 @@ export default async function DashboardHome() {
                       <NotificationIcon type={n.type} />
                       <div className="min-w-0">
                         {n.link ? (
-                          <Link href={n.link} className="text-sm font-medium hover:text-primary">{n.title}</Link>
+                          <Link href={n.link} className="text-sm font-medium hover:text-accent-foreground">{n.title}</Link>
                         ) : (
                           <p className="text-sm font-medium">{n.title}</p>
                         )}
@@ -192,7 +192,7 @@ export default async function DashboardHome() {
                 <ul className="space-y-3 text-sm">
                   {decisions.map((d) => (
                     <li key={d.id} className="flex items-center justify-between gap-2">
-                      <Link href={`/dashboard/reviews/${d.project.id}`} className="truncate hover:text-primary">{d.project.title}</Link>
+                      <Link href={`/dashboard/reviews/${d.project.id}`} className="truncate hover:text-accent-foreground">{d.project.title}</Link>
                       <span className="shrink-0 text-xs text-muted-foreground">{d.action.toLowerCase()} · {formatDate(d.createdAt)}</span>
                     </li>
                   ))}

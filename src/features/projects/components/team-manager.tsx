@@ -225,7 +225,7 @@ export function TeamManager({
           )}
 
           {mode === 'revision' && changed && (
-            <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <div className="space-y-3 rounded-xl border border-tile-3/30 bg-accent/50 p-4">
               <Label htmlFor="note">Note for reviewers (optional)</Label>
               <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder="Why is the team changing?" />
               <div className="flex justify-end gap-2">

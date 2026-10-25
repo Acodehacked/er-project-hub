@@ -32,7 +32,7 @@ export default async function NotificationsPage() {
         <Reveal stagger={0.03} className="divide-y overflow-hidden rounded-xl border bg-card">
           {items.map((n) => {
             const body = (
-              <div className={cn('flex gap-3 p-4', !n.isRead && 'bg-primary/5')}>
+              <div className={cn('flex gap-3 p-4', !n.isRead && 'bg-accent/60')}>
                 <NotificationIcon type={n.type} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 font-medium">

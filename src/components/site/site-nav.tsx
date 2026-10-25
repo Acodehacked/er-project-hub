@@ -13,7 +13,7 @@ import { NAV_ICONS } from '@/components/navigation/nav-icons';
 export function SiteNavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (
-    <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+    <nav className="hidden items-center gap-2 md:flex" aria-label="Main">
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
@@ -21,8 +21,8 @@ export function SiteNavLinks({ items }: { items: NavItem[] }) {
             key={item.href}
             href={item.href}
             className={cn(
-              'relative rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground',
-              active && 'text-foreground after:absolute after:inset-x-3 after:-bottom-[13px] after:h-0.5 after:rounded-full after:bg-primary',
+              'relative rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground',
+              active && 'font-medium text-foreground after:absolute after:-bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-spectrum',
             )}
           >
             {item.title}

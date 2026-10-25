@@ -27,7 +27,7 @@ export function QueueList({ projects, currentUserId }: { projects: QueueProject[
           <Link href={`/dashboard/reviews/${p.id}`} className="group flex items-center gap-4 p-4 transition-colors hover:bg-accent/50">
             <UserAvatar user={p.leader} className="size-9" />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium group-hover:text-primary">{p.title}</p>
+              <p className="truncate font-medium group-hover:text-accent-foreground">{p.title}</p>
               <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                 <span>{p.leader.name} + {p.members.length - 1}</span>
                 <span>·</span>

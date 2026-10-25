@@ -94,7 +94,7 @@ function FilterPanel({ options }: { options: RepositoryFilterOptions }) {
                   onClick={() => update({ tech: on ? null : t.slug })}
                   className={cn(
                     'rounded-md border px-2 py-1 font-mono text-xs transition-colors',
-                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-primary/50 hover:text-primary',
+                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-tile-3/50 hover:text-accent-foreground',
                   )}
                 >
                   {t.name} <span className="opacity-60">{t.projectCount}</span>

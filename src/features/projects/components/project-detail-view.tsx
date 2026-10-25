@@ -89,7 +89,7 @@ export function ProjectDetailView({
             <h2 className="text-lg font-semibold">Technologies</h2>
             <div className="flex flex-wrap gap-2">
               {project.technologies.map(({ technology }) => (
-                <Link key={technology.id} href={`/technologies/${technology.slug}`} className="rounded-lg border bg-card px-3 py-1.5 font-mono text-sm transition-colors hover:border-primary/50 hover:text-primary">
+                <Link key={technology.id} href={`/technologies/${technology.slug}`} className="rounded-lg border bg-card px-3 py-1.5 font-mono text-sm transition-colors hover:border-tile-3/50 hover:text-accent-foreground">
                   {technology.name}
                 </Link>
               ))}
@@ -107,7 +107,7 @@ export function ProjectDetailView({
                 const Icon = DOC_ICONS[doc.kind];
                 return (
                   <div key={doc.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></span>
+                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground"><Icon className="size-5" /></span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{doc.fileName}</p>
                       <p className="text-xs text-muted-foreground">{DOCUMENT_KIND_LABELS[doc.kind]} · {formatFileSize(doc.fileSize)}</p>

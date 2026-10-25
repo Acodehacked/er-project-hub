@@ -22,15 +22,15 @@ export function ProjectCard({
 }) {
   const link = href ?? `/projects/${project.slug}`;
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-      <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-tile-3/40 hover:shadow-xl hover:shadow-tile-3/10">
+      <div className="relative m-1.5 mb-0 aspect-[16/9] overflow-hidden rounded-xl bg-muted">
         <div className="size-full transition-transform duration-500 group-hover:scale-[1.04]">
           <ProjectCover imageId={project.images[0]?.id} seed={project.slug} title={project.title} />
         </div>
         <div className="absolute top-3 left-3 flex gap-1.5">
-          <Badge className="border-0 bg-background/90 text-foreground backdrop-blur">{project.department.code}</Badge>
+          <Badge className="glass text-foreground">{project.department.code}</Badge>
           {project.isFeatured && (
-            <Badge className="border-0 bg-primary/95 backdrop-blur">
+            <Badge className="border-0 bg-primary/90 backdrop-blur">
               <Star className="fill-current" /> Featured
             </Badge>
           )}
@@ -49,7 +49,7 @@ export function ProjectCard({
         {project.technologies.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {project.technologies.map((t) => (
-              <span key={t.technology.slug} className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[11px] text-secondary-foreground">
+              <span key={t.technology.slug} className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] text-secondary-foreground">
                 {t.technology.name}
               </span>
             ))}

@@ -123,7 +123,7 @@ export function FileManager({
               type="button"
               disabled={readOnly}
               onClick={() => imageInput.current?.click()}
-              className="grid w-full place-items-center gap-2 rounded-xl border border-dashed p-10 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              className="grid w-full place-items-center gap-2 rounded-xl border border-dashed p-10 text-sm text-muted-foreground transition-colors hover:border-tile-3/50 hover:text-foreground"
             >
               <Upload className="size-6" /> Click to upload your first image — it becomes the cover.
             </button>
@@ -167,9 +167,9 @@ export function FileManager({
           {documents.length === 0 && <p className="text-sm text-muted-foreground">No documents yet. Reviewers usually expect your project report.</p>}
           {documents.map((doc) => (
             <div key={doc.id} className="flex items-center gap-3 rounded-xl border p-3">
-              <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary"><FileText className="size-4" /></span>
+              <span className="grid size-9 place-items-center rounded-lg bg-accent text-accent-foreground"><FileText className="size-4" /></span>
               <div className="min-w-0 flex-1">
-                <a href={documentUrl(doc.id)} className="block truncate text-sm font-medium hover:text-primary">{doc.fileName}</a>
+                <a href={documentUrl(doc.id)} className="block truncate text-sm font-medium hover:text-accent-foreground">{doc.fileName}</a>
                 <p className="text-xs text-muted-foreground">{DOCUMENT_KIND_LABELS[doc.kind]} · {formatFileSize(doc.fileSize)}</p>
               </div>
               {!readOnly && (

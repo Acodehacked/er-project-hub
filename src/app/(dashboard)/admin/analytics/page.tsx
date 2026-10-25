@@ -58,8 +58,8 @@ export default async function AnalyticsPage() {
             <ol className="space-y-3">
               {viewed.map((p, i) => (
                 <li key={p.slug} className="flex items-center gap-3 text-sm">
-                  <span className="grid size-6 place-items-center rounded-full bg-primary/10 font-mono text-xs text-primary">{i + 1}</span>
-                  <Link href={`/projects/${p.slug}`} className="min-w-0 flex-1 truncate hover:text-primary">{p.title}</Link>
+                  <span className="grid size-6 place-items-center rounded-full bg-accent font-mono text-xs text-accent-foreground">{i + 1}</span>
+                  <Link href={`/projects/${p.slug}`} className="min-w-0 flex-1 truncate hover:text-accent-foreground">{p.title}</Link>
                   <span className="font-mono text-muted-foreground tabular-nums">{p.viewsCount}</span>
                 </li>
               ))}

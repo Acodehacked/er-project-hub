@@ -26,9 +26,9 @@ export default async function TechnologiesPage() {
               <h2 className="mb-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">{TECH_CATEGORY_LABELS[category]}</h2>
               <Reveal stagger={0.03} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {list.map((t) => (
-                  <Link key={t.id} href={`/technologies/${t.slug}`} className="group rounded-xl border bg-card p-4 transition-colors hover:border-primary/40">
+                  <Link key={t.id} href={`/technologies/${t.slug}`} className="group rounded-xl border bg-card p-4 transition-colors hover:border-tile-3/50">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-mono font-semibold group-hover:text-primary">{t.name}</span>
+                      <span className="font-mono font-semibold group-hover:text-accent-foreground">{t.name}</span>
                       <span className="text-sm text-muted-foreground tabular-nums">{t.projectCount}</span>
                     </div>
                     <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">

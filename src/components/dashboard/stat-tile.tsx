@@ -19,8 +19,8 @@ export function StatTile({
   hint?: string;
 }) {
   const tones = {
-    primary: 'bg-primary/10 text-primary',
-    info: 'bg-info/12 text-info',
+    primary: 'bg-tile-3/15 text-tile-3',
+    info: 'bg-tile-1/15 text-info',
     success: 'bg-success/12 text-success',
     warning: 'bg-warning/20 text-warning-foreground dark:text-warning',
     muted: 'bg-muted text-muted-foreground',
@@ -29,17 +29,17 @@ export function StatTile({
     <>
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
-        <span className={cn('grid size-9 place-items-center rounded-lg', tones[tone])}>
+        <span className={cn('grid size-9 place-items-center rounded-xl', tones[tone])}>
           <Icon className="size-4.5" />
         </span>
       </div>
-      <CountUp value={value} className="mt-2 block text-3xl font-bold tabular-nums" />
+      <CountUp value={value} className="mt-2 block text-3xl font-semibold tracking-tight tabular-nums" />
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </>
   );
-  const cls = 'block rounded-xl border bg-card p-5 shadow-xs transition-colors';
+  const cls = 'block rounded-2xl border border-border/70 bg-card p-5 shadow-soft transition-all';
   return href ? (
-    <Link href={href} className={cn(cls, 'hover:border-primary/40')}>{body}</Link>
+    <Link href={href} className={cn(cls, 'hover:-translate-y-0.5 hover:border-tile-3/40')}>{body}</Link>
   ) : (
     <div className={cls}>{body}</div>
   );

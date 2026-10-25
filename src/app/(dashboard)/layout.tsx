@@ -40,13 +40,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         canCreate={hasPermission(user, 'project:create')}
       />
       <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-lg">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border/60 bg-card/70 px-4 backdrop-blur-xl">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-5" />
-          <CommandPalette items={sections.flatMap((s) => s.items)} className="w-9 px-0 sm:w-72 sm:px-3" />
+          <CommandPalette items={sections.flatMap((s) => s.items)} className="w-9 rounded-full bg-secondary/70 px-0 sm:w-72 sm:px-3" />
           <div className="ml-auto flex items-center gap-1">
             <NotificationBell unread={unread} items={latest} />
-            <ThemeToggle />
+            <ThemeToggle className="bg-secondary/70" />
             <UserMenu user={toMenuUser(user)} />
           </div>
         </header>

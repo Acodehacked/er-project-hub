@@ -7,9 +7,9 @@ const MAP: Record<string, { icon: typeof Bell; tone: string }> = {
   approved: { icon: CircleCheck, tone: 'bg-success/15 text-success' },
   rejected: { icon: CircleX, tone: 'bg-destructive/15 text-destructive' },
   archived: { icon: Archive, tone: 'bg-muted text-muted-foreground' },
-  added: { icon: UserPlus, tone: 'bg-primary/15 text-primary' },
+  added: { icon: UserPlus, tone: 'bg-accent text-accent-foreground' },
   removed: { icon: UserMinus, tone: 'bg-muted text-muted-foreground' },
-  assigned: { icon: GraduationCap, tone: 'bg-primary/15 text-primary' },
+  assigned: { icon: GraduationCap, tone: 'bg-accent text-accent-foreground' },
   updated: { icon: UserCog, tone: 'bg-info/15 text-info' },
 };
 

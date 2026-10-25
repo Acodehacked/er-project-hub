@@ -41,7 +41,7 @@ export default async function AdminHome() {
       <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Reveal stagger className="grid gap-3 sm:grid-cols-2">
           {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="group rounded-xl border bg-card p-5 transition-colors hover:border-primary/40">
+            <Link key={l.href} href={l.href} className="group rounded-xl border bg-card p-5 transition-colors hover:border-tile-3/50">
               <l.icon className="size-5 text-primary" />
               <p className="mt-3 flex items-center gap-1 font-semibold">{l.label} <ArrowRight className="size-4 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" /></p>
               <p className="mt-1 text-sm text-muted-foreground">{l.text}</p>

@@ -29,7 +29,7 @@ export function WizardSteps({ projectId, current, done }: { projectId: string; c
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
                   'flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors',
-                  isCurrent ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/30' : 'bg-card hover:border-primary/50',
+                  isCurrent ? 'border-primary bg-primary text-primary-foreground shadow-lift' : 'bg-card hover:border-tile-3/50',
                 )}
               >
                 <span
